@@ -1,0 +1,44 @@
+# Publishes AltSADATrial.zip as a GitHub Release whenever it changes on main.
+# The version comes from the folder name inside the ZIP (AltSADATrial-1.000/ → v1.000),
+# falling back to the VERSION file. Pushing the same version again replaces the asset.
+name: Release font
+
+on:
+  push:
+    branches: [main]
+    paths: ["AltSADATrial.zip", "VERSION"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: v
+        run: |
+          ver=$(unzip -Z1 AltSADATrial.zip | head -1 | grep -oE '[0-9]+\.[0-9]+' | head -1 || true)
+          [ -n "$ver" ] || ver=$(tr -d '[:space:]' < VERSION)
+          [ -n "$ver" ] || { echo "No version found"; exit 1; }
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+          echo "Version: $ver"
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.v.outputs.version }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" AltSADATrial.zip --clobber
+            echo "Updated asset on $TAG"
+          else
+            gh release create "$TAG" AltSADATrial.zip \
+              --title "Alt SADA Trial $TAG" \
+              --notes "Sa Đà typeface — trial $TAG. Download: https://fonts.studioalt.work/sada/" \
+              --latest
+            echo "Created $TAG"
+          fi
