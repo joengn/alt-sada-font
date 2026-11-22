@@ -14,14 +14,14 @@ Nút Download trên trang luôn trỏ tới bản mới nhất:
 ```
 
 Script lấy file `.zip` mới nhất trong `AltType/SADA/Release`, đổi tên thành `AltSADATrial.zip`,
-ghi phiên bản vào `VERSION`, rồi commit + push. Khoảng 1 phút sau GitHub Actions tạo Release
-`v<phiên bản>` và trang web tự tải bản đó — không cần sửa code hay deploy lại website.
+ghi phiên bản gốc vào `VERSION`, rồi commit + push. Khoảng 1 phút sau GitHub Actions tạo Release
+mới (tự đánh số) và trang web tự tải bản đó — không cần sửa code hay deploy lại website.
 
-**Cách thủ công:** chép file mới vào thư mục này với đúng tên `AltSADATrial.zip`, sửa số trong `VERSION`,
+**Cách thủ công:** chép file mới vào thư mục này với đúng tên `AltSADATrial.zip`,
 rồi commit + push lên `main` (GitHub Desktop cũng được).
 
 ## Lưu ý
 - Luôn giữ đúng tên **`AltSADATrial.zip`**.
-- Phiên bản đọc từ tên thư mục bên trong ZIP (`AltSADATrial-1.000/` → `v1.000`). Đẩy lại cùng phiên bản thì file trong Release đó được thay thế.
+- Số phiên bản tự đánh trên GitHub: mỗi lần ZIP thay đổi là một Release mới. Nếu tên thư mục trong ZIP (`AltSADATrial-1.000/` → `1.000`) mới hơn Release gần nhất thì dùng số đó, nếu không thì tăng 0.001 (`v1.000` → `v1.001` → `v1.002`…). File ZIP giữ nguyên tên gốc như lúc build.
 - Repo phải để **Public** thì người ngoài mới tải được.
 - Dòng "ZIP / … KB · v…" trên trang tự cập nhật theo Release mới nhất.
