@@ -1,8 +1,7 @@
-# Publishes AltSADATrial.zip as a new GitHub Release whenever it changes on main.
-# Numbering is automatic: the base version comes from the folder name inside the ZIP
-# (AltSADATrial-1.000/ → 1.000, falling back to VERSION). If that version is newer than the latest
-# release it is used as is; otherwise the latest release number goes up by 0.001 (v1.000 → v1.001).
-# The ZIP itself is published exactly as it was built (its file and folder names are not changed).
+# Publishes AltSADATrial.zip as a GitHub Release whenever it changes on main.
+# The release number is the ZIP's own version: the folder name inside it (AltSADATrial-1.005/ → v1.005),
+# falling back to VERSION. A new version makes a new release; a rebuild with the same version replaces
+# the file on that release (and keeps it marked Latest). The ZIP is published exactly as it was built.
 name: Release font
 
 on:
@@ -20,36 +19,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Pick version
+      - name: Read version
         id: v
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          base=$(unzip -Z1 AltSADATrial.zip | head -1 | grep -oE '[0-9]+\.[0-9]+' | head -1 || true)
-          [ -n "$base" ] || base=$(tr -d '[:space:]' < VERSION)
-          [ -n "$base" ] || { echo "No version found"; exit 1; }
-          latest=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name 2>/dev/null || true)
-          ver=$(python3 - "$base" "${latest#v}" <<'PY'
-          import sys
-          from decimal import Decimal
-          base, latest = sys.argv[1], sys.argv[2]
-          if not latest or Decimal(base) > Decimal(latest):
-              print(base)
-          else:
-              print(f"{Decimal(latest) + Decimal('0.001'):.3f}")
-          PY
-          )
+          ver=$(unzip -Z1 AltSADATrial.zip | head -1 | grep -oE '[0-9]+\.[0-9]+' | head -1 || true)
+          [ -n "$ver" ] || ver=$(tr -d '[:space:]' < VERSION)
+          [ -n "$ver" ] || { echo "No version found"; exit 1; }
           echo "version=$ver" >> "$GITHUB_OUTPUT"
-          echo "ZIP version: $base · latest release: ${latest:-none} · new release: v$ver"
+          echo "Version: $ver"
 
-      - name: Create release
+      - name: Create or update release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: v${{ steps.v.outputs.version }}
         run: |
-          gh release create "$TAG" AltSADATrial.zip \
-            --target "$GITHUB_SHA" \
-            --title "Alt SADA Trial $TAG" \
-            --notes "Sa Đà typeface, trial $TAG. Download: https://fonts.studioalt.work/sada/" \
-            --latest
-          echo "Created $TAG"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" AltSADATrial.zip --clobber
+            gh release edit "$TAG" --latest
+            echo "Replaced the ZIP on $TAG"
+          else
+            gh release create "$TAG" AltSADATrial.zip \
+              --target "$GITHUB_SHA" \
+              --title "Alt SADA Trial $TAG" \
+              --notes "Sa Đà typeface, trial $TAG. Download: https://fonts.studioalt.work/sada/" \
+              --latest
+            echo "Created $TAG"
+          fi
