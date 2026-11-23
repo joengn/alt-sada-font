@@ -1,0 +1,24 @@
+# One-off: rewrite the notes of every existing release to the current wording.
+# Run it once from the Actions tab (Fix release notes → Run workflow), then you can delete this file.
+name: Fix release notes
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rewrite notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[] | "\(.id) \(.tag_name)"' |
+          while read -r id tag; do
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$id" \
+              -f body="Sa Đà typeface, trial $tag. Download: https://fonts.studioalt.work/sada/" \
+              --jq '"\(.tag_name): \(.body)"'
+          done

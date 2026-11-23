@@ -50,6 +50,6 @@ jobs:
           gh release create "$TAG" AltSADATrial.zip \
             --target "$GITHUB_SHA" \
             --title "Alt SADA Trial $TAG" \
-            --notes "Sa Đà typeface — trial $TAG. Download: https://fonts.studioalt.work/sada/" \
+            --notes "Sa Đà typeface, trial $TAG. Download: https://fonts.studioalt.work/sada/" \
             --latest
           echo "Created $TAG"
